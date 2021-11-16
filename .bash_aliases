@@ -12,9 +12,20 @@ alias gp='git pull'
 alias gc='git commit'
 alias gl='git log'
 alias gb='git branch'
-alias gbd='git branch -D'i
+alias gbd='git branch -D'
 alias ga='git add -p'
 alias gpm='git pull origin main'
+
+function gpd() {
+	echo 'did you mean gpm?'
+	read response
+
+	if [ "$response" = "y" ] || [ "$response" = "yes" ]; then
+		gpm
+	else
+		echo 'okay then, good luck!'
+	fi
+}
 
 __git_complete gbd _git_checkout
 

@@ -1,0 +1,96 @@
+function fish_prompt
+     printf '%s' $PWD (fish_git_prompt) ' $ '
+end
+
+funcsave fish_prompt
+
+# . /usr/share/bash-completion/completions/git
+
+alias gs='git status'
+alias gr='git reflog'
+alias gh='git push'
+alias gp='git pull'
+alias gc='git commit'
+alias gl='git log'
+alias gb='git branch'
+alias gbd='git branch -D'
+alias ga='git add -p'
+alias gpm='git pull origin main'
+alias gcp='gc -m "npm prettier" --no-verify'
+
+funcsave gs
+funcsave gr
+funcsave gh
+funcsave gp
+funcsave gc
+funcsave gl
+funcsave gb
+funcsave gbd
+funcsave ga
+funcsave gpm
+funcsave gcp
+
+function gpd
+	echo 'did you mean gpm?'
+	read response
+
+	if [ "$response" = "y" ] || [ "$response" = "yes" ]; then
+		gpm
+	else
+		git pull origin develop
+	end
+end
+funcsave gpd
+
+# __git_complete gbd _git_checkout
+
+function gcm
+	gc -m "$1"
+end
+funcsave gcm
+
+function gcmn
+	gc -m "$1" --no-verify
+end
+funcsave gcmn
+
+alias gch='git fetch --prune && git checkout'
+funcsave gch
+
+# __git_complete gch _git_checkout
+
+function gnb
+	gch main
+	git pull origin main
+	set gitBranch $argv[1]
+	if [[ "$gitBranch" != *"todd/"* ]]; then
+		set gitBranch "todd/$gitBranch"
+	end
+	git checkout -b $gitBranch
+	git reset --soft origin/main
+	git push --set-upstream origin $gitBranch
+end
+funcsave gnb
+
+set -x PATH "$HOME/.tfenv/bin:$PATH"
+set -x EDITOR vim
+
+function ensureAWSSSO
+    set profile $argv[1]
+
+    set aws_user (aws --profile $profile sts get-caller-identity | grep UserId)
+
+    if [ "$aws_user" = "" ];
+        echo "not logged in to AWS SSO, logging in"
+        aws --profile $profile sso login
+    end
+end
+funcsave ensureAWSSSO
+
+function cleanUpBuckets
+	ensureAWSSSO "datacollector-testing"
+
+	for b in $(AWS_PROFILE=datacollector-testing aws s3api list-buckets | jq -r '.Buckets | .[] | .Name'); AWS_PROFILE=datacollector-testing aws s3 rm s3://$b --recursive && AWS_PROFILE=datacollector-testing aws s3 rb s3://$b; end
+end
+funcsave cleanUpBuckets
+
